@@ -42,15 +42,40 @@ export class BrightdataClient {
     async triggerAsync(datasetId: string, input: any): Promise<{ snapshot_id: string; }> {
         try {
 
-            console.log('datasetId', datasetId)
-            console.log('input', input)
-            const webhookUrl = 'https://c211a436e62b.ngrok-free.app/dev/data-collection/webhook/facebook/brightdata';
 
-            const url = `https://api.brightdata.com/datasets/v3/trigger?dataset_id=${datasetId}&endpoint=${webhookUrl}&auth_header=&notify=false&format=json&uncompressed_webhook=true&force_deliver=false&include_errors=true`;
-            const body = { input: Array.isArray(input) ? input : [input] };
+            const webhookUrl = 'https://268f351089b0.ngrok-free.app/dev/data-collection/webhook/facebook/brightdata';
+
+            // const url = `https://api.brightdata.com/datasets/v3/trigger?dataset_id=${datasetId}&endpoint=${encodeURIComponent(webhookUrl)}&auth_header=&notify=true&format=json&uncompressed_webhook=true&force_deliver=false&include_errors=true`;
+            // const body = { input: Array.isArray(input) ? input : [input] };
+            // console.log('url', url)
+            // console.log('body----', body)
 
 
-            const { data } = await firstValueFrom(this.http.post(url, body, { headers: this.headers }));
+            // const { data } = await firstValueFrom(this.http.post(url, body, { headers: this.headers }));
+
+
+            //  เปลี่ยน: body ต้องเป็น "array" ไม่ใช่ { input: [...] }
+            const body = Array.isArray(input) ? input : [input];
+
+            // ✅ แนะนำใช้ params ให้ Axios encode ให้เอง
+            const url = 'https://api.brightdata.com/datasets/v3/trigger';
+
+            const { data } = await firstValueFrom(
+                this.http.post(url, body, {
+                    params: {
+                        dataset_id: datasetId,
+                        endpoint: webhookUrl,
+                        notify: true,                 // ต้อง true เพื่อให้ยิง webhook
+                        format: 'json',
+                        uncompressed_webhook: true,
+                        include_errors: true,
+                        // ไม่ต้องใส่ auth_header ถ้าไม่ใช้
+                        // auth_header: 'Authorization: Bearer <YOUR_WEBHOOK_SECRET>',
+                    },
+                    headers: this.headers,
+                    timeout: 60000,
+                })
+            );
 
             console.log('data', data)
 

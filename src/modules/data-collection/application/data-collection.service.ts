@@ -67,6 +67,7 @@ export class DataCollectionService {
 
         // await this.storage.updateRawData({ _id: rawData._id }, (rawDataToUpdate))
         await this.storage.saveManyRawData(rawDataToUpdate);
+        await this.storage.deleteOneRawData({ _id: rawData._id })
 
 
     }

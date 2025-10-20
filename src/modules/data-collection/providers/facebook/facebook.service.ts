@@ -67,7 +67,7 @@ export class FacebookService {
             const ds = this.bd.dataset('FB_COMMENTS_BY_URL');
             const run = await this.bd.triggerAsync(ds, payload);
             const snapshotId = run?.snapshot_id ?? ds;
-            await this.bd.deliverSnapshotToWebhook(snapshotId)
+
             return {
                 snapshot_id: snapshotId,
                 datasetId: ds

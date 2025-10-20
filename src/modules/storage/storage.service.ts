@@ -25,9 +25,12 @@ export class StorageService {
         return this.rawDataRepository.findOne(filter);
     }
 
-    updateRawData(filter: FilterQuery<RawData>, doc: NewRawData): Promise<RawData | null> {
-        return this.rawDataRepository.updateOne(filter, doc);
+    updateOneRawData(filter: FilterQuery<RawData>, doc: NewRawData): Promise<RawData | null> {
+        return this.rawDataRepository.updateOneRawData(filter, doc);
 
+    }
+    deleteOneRawData(filter: FilterQuery<RawData>): Promise<RawData | null> {
+        return this.rawDataRepository.deleteOneRawData(filter);
     }
 
 }
