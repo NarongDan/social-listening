@@ -25,21 +25,22 @@ export class DevDataCollectionController {
 
     @Post('facebook/pages-posts/async')
     async fbPagesPostsAsync(
-        @Body() dto: FbCommentsPayloadDto,
-    ): Promise<void> {
-        // ถ้าคุณแยก start/fetch ก็เปลี่ยนมาที่ service ฝั่งนั้นได้
-        const { input, batchKey } = dto
-        await this.dataCollectionService.collectFbCommentsAsync(input);
-        // return res; // { inserted: number }
-    }
-
-    @Post('facebook/comments/async')
-    async fbCommentsAsync(
         @Body() dto: FbPagesPostsPayloadDto,
     ): Promise<void> {
         // ถ้าคุณแยก start/fetch ก็เปลี่ยนมาที่ service ฝั่งนั้นได้
         const { input, batchKey } = dto
         await this.dataCollectionService.collectFbPagesPostsByProfileUrlAsync(input);
+
+        // return res; // { inserted: number }
+    }
+
+    @Post('facebook/comments/async')
+    async fbCommentsAsync(
+        @Body() dto: FbCommentsPayloadDto,
+    ): Promise<void> {
+        // ถ้าคุณแยก start/fetch ก็เปลี่ยนมาที่ service ฝั่งนั้นได้
+        const { input, batchKey } = dto
+        await this.dataCollectionService.collectFbCommentsAsync(input);
         // return res; // { inserted: number }
     }
 

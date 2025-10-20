@@ -41,12 +41,18 @@ export class BrightdataClient {
     /** ---------- Asynchronous trigger (returns run info) ---------- */
     async triggerAsync(datasetId: string, input: any): Promise<{ snapshot_id: string; }> {
         try {
-            const url = `https://api.brightdata.com/datasets/v3/trigger?dataset_id=${datasetId}&notify=false&include_errors=true`;
+
+            console.log('datasetId', datasetId)
+            console.log('input', input)
+            const webhookUrl = 'https://c211a436e62b.ngrok-free.app/dev/data-collection/webhook/facebook/brightdata';
+
+            const url = `https://api.brightdata.com/datasets/v3/trigger?dataset_id=${datasetId}&endpoint=${webhookUrl}&auth_header=&notify=false&format=json&uncompressed_webhook=true&force_deliver=false&include_errors=true`;
             const body = { input: Array.isArray(input) ? input : [input] };
 
 
             const { data } = await firstValueFrom(this.http.post(url, body, { headers: this.headers }));
 
+            console.log('data', data)
 
             return data;
         } catch (error) {
@@ -114,28 +120,35 @@ export class BrightdataClient {
         //     throw new Error(`Webhook endpoint must include protocol (http/https): ${endpoint}`);
         // }
 
+
+
         const url = `https://api.brightdata.com/datasets/v3/deliver/${encodeURIComponent(
             snapshotId,
         )}`;
 
-        const body = {
-            deliver: {
-                type: 'webhook',
-                filename: {
-                    template: opts?.template ?? 'fb_pages_{{snapshot_id}}_{{timestamp}}',
-                    extension: opts?.extension ?? 'json',
-                },
-                endpoint: "https://c211a436e62b.ngrok-free.app/dev/data-collection/webhook/facebook/brightdata",
-            },
-            compress: !!opts?.compress,
-        };
+        try {
+            const { data } = await firstValueFrom(
+                this.http.post(url, {
+                    deliver: {
+                        type: 'webhook',
+                        filename: {
+                            template: opts?.template ?? 'fb_pages_{{snapshot_id}}_{{timestamp}}',
+                            extension: opts?.extension ?? 'json',
+                        },
+                        endpoint: 'https://c211a436e62b.ngrok-free.app/dev/data-collection/webhook/facebook/brightdata',
+                    },
+                    compress: Boolean(opts?.compress),  // ✅ ไม่มีขึ้นบรรทัด
+                }
+                    , { headers: this.headers }),
+            );
 
-        const { data } = await firstValueFrom(
-            this.http.post(url, body, { headers: this.headers }),
-        );
 
-        console.log('data', data)
-        return data; // Bright Data จะตอบรายละเอียด job กลับมา
+            return data; // Bright Data จะตอบรายละเอียด job กลับมา
+        } catch (error) {
+
+            throw error;
+        }
+
 
     }
 

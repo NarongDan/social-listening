@@ -4,6 +4,7 @@ import { FacebookService } from '../providers/facebook/facebook.service';
 import { StorageService } from '../../storage/storage.service';
 import { NewRawData } from '../../storage/domain/types/raw-data.types';
 import { FbCommentsItemDto, FbPageInputItemDto } from '../presentation/dtos/fb-pages.dto';
+import { RawData } from '../../storage/domain/schemas/raw-data.schema';
 
 
 @Injectable()
@@ -17,6 +18,7 @@ export class DataCollectionService {
     }
 
     async collectFbPagesPostsByProfileUrlAsync(payload: FbPageInputItemDto[]): Promise<void> {
+        console.log('payload--------', payload)
         const { snapshot_id, datasetId } = await this.fb.pagesPostsByProfileUrlAsync(payload);
         const data: NewRawData = {
             source: 'facebook',
@@ -50,17 +52,17 @@ export class DataCollectionService {
 
     async receiveFacebookSnapshotFromBrightData(payload: any, snapshotId: string, batchKey?: string): Promise<void> {
 
-        // const rawData = await this.storage.findRawData({ snapshot_id: snapshotId, source: 'facebook' });
+        const rawData = await this.storage.findRawData({ snapshot_id: snapshotId, source: 'facebook' })
         // console.log('payload', payload)
 
         // console.log('rawData', rawData)
-        // if (!rawData) {
-        //     return
-        // }
+        if (!rawData) {
+            return
+        }
 
         const key = batchKey ?? new Date().toISOString();
 
-        const rawDataToUpdate = payload.map((r: any) => this.fb.toRaw(r, snapshotId, key));
+        const rawDataToUpdate = payload.map((r: any) => this.fb.toRaw(r, snapshotId, key, rawData.meta.scraper, rawData.meta.datasetId));
         console.log('rawDataToUpdate------', rawDataToUpdate)
 
         // await this.storage.updateRawData({ _id: rawData._id }, (rawDataToUpdate))

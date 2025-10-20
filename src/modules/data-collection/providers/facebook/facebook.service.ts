@@ -37,6 +37,7 @@ export class FacebookService {
             const ds = this.bd.dataset('FB_PAGES_POSTS_BY_PROFILE_URL');
             const run = await this.bd.triggerAsync(ds, payload);
             const snapshotId = run?.snapshot_id ?? ds;
+            console.log('snapshotId---------', snapshotId)
             await this.bd.deliverSnapshotToWebhook(snapshotId)
 
 
@@ -73,7 +74,7 @@ export class FacebookService {
             }
 
         } catch (error) {
-            throw new Error(`FB_PAGES_POSTS_BY_PROFILE_URL async failed: ${(e as Error).message}`);
+            throw new Error(`FB_PAGES_POSTS_BY_PROFILE_URL async failed: ${(error as Error).message}`);
         }
     }
 
