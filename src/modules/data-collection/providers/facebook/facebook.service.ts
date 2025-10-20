@@ -2,13 +2,14 @@
 import { Injectable } from '@nestjs/common';
 import { BrightdataClient } from '../../adapters/brightdata/brightdata.client';
 import { NewRawData } from '../../../storage/domain/types/raw-data.types';
+import { FbCommentsItemDto, FbPageInputItemDto } from '../../presentation/dtos/fb-pages.dto';
 
 @Injectable()
 export class FacebookService {
     constructor(private readonly bd: BrightdataClient) { }
 
     /** map → NewRawData (รูปแบบเดียวกับที่ใช้ใน Storage) */
-    private toRaw(row: any, snapshort_id: string, batchKey: string, scraper: string, datasetId: string): NewRawData {
+    toRaw(row: any, snapshort_id: string, batchKey: string, scraper?: string, datasetId?: string): NewRawData {
         return {
             source: 'facebook',
             snapshot_id: snapshort_id,
@@ -16,7 +17,7 @@ export class FacebookService {
             externalId: row?.post_id ?? row?.id,
             payload: row,
             collectedAt: row?.time ? new Date(row.time) : new Date(),
-            meta: { scraper, datasetId },
+            ...(scraper && datasetId ? { meta: { scraper, datasetId } } : {}),
         };
     }
 
@@ -29,19 +30,25 @@ export class FacebookService {
 
     /** ---------- Asynchronous mode (trigger + poll) ---------- */
     async pagesPostsByProfileUrlAsync(
-        payload: any,
-        batchKey: string,
-        poll?: { intervalMs?: number; maxAttempts?: number },
-    ): Promise<NewRawData[]> {
+        payload: FbPageInputItemDto[],
+        // ): Promise<NewRawData[]> {
+    ): Promise<{ snapshot_id: string, datasetId: string }> {
         try {
             const ds = this.bd.dataset('FB_PAGES_POSTS_BY_PROFILE_URL');
             const run = await this.bd.triggerAsync(ds, payload);
             const snapshotId = run?.snapshot_id ?? ds;
-            const { snapshot_id, rows } = await this.bd.pollExport(snapshotId, poll);
+            await this.bd.deliverSnapshotToWebhook(snapshotId)
 
-            if (!rows.length || !snapshot_id) return [];
 
-            return rows.map((r: any) => this.toRaw(r, snapshot_id, batchKey, 'FB_PAGES_POSTS_BY_PROFILE_URL', ds));
+            // const { snapshot_id, rows } = await this.bd.pollExport(snapshotId, poll);
+
+            // if (!rows.length || !snapshot_id) return [];
+
+            // return rows.map((r: any) => this.toRaw(r, snapshot_id, batchKey, 'FB_PAGES_POSTS_BY_PROFILE_URL', ds));
+            return {
+                snapshot_id: snapshotId,
+                datasetId: ds
+            }
         } catch (e) {
             throw new Error(`FB_PAGES_POSTS_BY_PROFILE_URL async failed: ${(e as Error).message}`);
         }
@@ -53,6 +60,24 @@ export class FacebookService {
         const ds = this.bd.dataset('FB_PAGES_POSTS_BY_PROFILE_URL');
         return rows.map((r: any) => this.toRaw(r, snapshot_id, batchKey, 'FB_PAGES_POSTS_BY_PROFILE_URL', ds));
     }
+
+    async commentsAsync(payload: FbCommentsItemDto[]) {
+        try {
+            const ds = this.bd.dataset('FB_COMMENTS_BY_URL');
+            const run = await this.bd.triggerAsync(ds, payload);
+            const snapshotId = run?.snapshot_id ?? ds;
+            await this.bd.deliverSnapshotToWebhook(snapshotId)
+            return {
+                snapshot_id: snapshotId,
+                datasetId: ds
+            }
+
+        } catch (error) {
+            throw new Error(`FB_PAGES_POSTS_BY_PROFILE_URL async failed: ${(e as Error).message}`);
+        }
+    }
+
+
 
 
 }

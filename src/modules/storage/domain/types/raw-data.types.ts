@@ -12,7 +12,7 @@ export interface RawData {
     snapshot_id: string
 
     /** คีย์รอบการเก็บ เช่น jobId/snapshotId/วันที่ */
-    batchKey: string;
+    batchKey?: string;
 
     /** ตัวระบุภายนอก (post_id / url ฯลฯ) */
     externalId?: string;

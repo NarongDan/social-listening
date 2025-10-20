@@ -1,7 +1,7 @@
 // src/modules/storage/domain/repositories/raw-data.repository.ts
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
-import { Model } from 'mongoose';
+import { FilterQuery, Model } from 'mongoose';
 
 import { RawData, } from '../schemas/raw-data.schema';
 import { NewRawData } from '../types/raw-data.types';
@@ -36,5 +36,21 @@ export class RawDataRepository implements IRawDataRepository {
             (res.insertedIds ? Object.keys(res.insertedIds).length : 0);
 
         return { inserted };
+    }
+
+    async findOne(
+        filter: FilterQuery<RawData>,
+
+    ): Promise<RawData | null> {
+        const doc = await this.rawModel
+            .findOne(filter)
+
+
+        return doc;
+    }
+
+    async updateOne(filter: FilterQuery<RawData>, doc: NewRawData): Promise<RawData | null> {
+        const updated = await this.rawModel.findOneAndUpdate(filter, doc, { new: true });
+        return updated
     }
 }

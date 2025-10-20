@@ -1,4 +1,5 @@
-import { IsArray, IsOptional, IsString, IsInt, Min, IsObject, IsNotEmpty } from 'class-validator';
+import { Transform, Type } from 'class-transformer';
+import { IsArray, IsOptional, IsString, IsInt, Min, IsObject, IsNotEmpty, IsBoolean } from 'class-validator';
 
 export class FbPageInputItemDto {
     @IsNotEmpty() @IsString() url!: string;
@@ -13,3 +14,46 @@ export class FbPagesPostsPayloadDto {
     @IsOptional() @IsString() batchKey?: string;
 }
 
+const toUndefIfEmpty = ({ value }: { value: any }) =>
+    value === '' || value === null ? undefined : value
+
+export class FbCommentsItemDto {
+    @IsNotEmpty()
+    @IsString()
+    url!: string;
+
+    // "true" | "false" | true | false | "" -> boolean | undefined
+    @IsOptional()
+    @IsBoolean()
+    @Transform(({ value }) =>
+        value === '' || value === undefined ? undefined :
+            value === true || value === 'true' ? true :
+                value === false || value === 'false' ? false : value
+    )
+    get_all_replies?: boolean;
+
+
+    @IsOptional()
+    @IsInt()
+    @Min(1)
+    @Transform(({ value }) =>
+        value === '' || value === undefined ? undefined : parseInt(value, 10)
+    )
+    limit_records?: number;
+
+    // "", "newest", "oldest", "relevant" … (ขึ้นกับ template) -> string | undefined
+    @IsOptional()
+    @IsString()
+    @Transform(toUndefIfEmpty)
+    comments_sort?: string;
+}
+
+export class FbCommentsPayloadDto {
+    @IsArray()
+    @Type(() => FbCommentsItemDto)
+    input!: FbCommentsItemDto[];
+
+    @IsOptional()
+    @IsString()
+    batchKey?: string;
+}

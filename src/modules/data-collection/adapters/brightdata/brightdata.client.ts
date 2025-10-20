@@ -1,7 +1,7 @@
 import { Inject, Injectable } from '@nestjs/common';
-import { HttpService } from '@nestjs/axios';            // runtime import (คงไว้)
+import { HttpService } from '@nestjs/axios';
 import brightdataConfig from './brightdata.config';
-import type { ConfigType } from '@nestjs/config';       // 👈 เปลี่ยนเป็น import type
+import type { ConfigType } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
@@ -44,11 +44,10 @@ export class BrightdataClient {
             const url = `https://api.brightdata.com/datasets/v3/trigger?dataset_id=${datasetId}&notify=false&include_errors=true`;
             const body = { input: Array.isArray(input) ? input : [input] };
 
-            console.log('body------------', body)
+
             const { data } = await firstValueFrom(this.http.post(url, body, { headers: this.headers }));
 
-            console.log('data-------------', data)
-            // ปกติ data.id คือ run/dataset id ที่ใช้ตามไป export ได้
+
             return data;
         } catch (error) {
             throw new Error(`Trigger failed: ${(error as Error).message}`);
@@ -103,5 +102,41 @@ export class BrightdataClient {
     }
 
 
+    async deliverSnapshotToWebhook(
+        snapshotId: string,
+        opts?: {
+            template?: string;
+            extension?: 'json' | 'jsonl' | 'csv';
+            compress?: boolean;
+        },
+    ): Promise<any> {
+        // if (!/^https?:\/\//i.test(endpoint)) {
+        //     throw new Error(`Webhook endpoint must include protocol (http/https): ${endpoint}`);
+        // }
+
+        const url = `https://api.brightdata.com/datasets/v3/deliver/${encodeURIComponent(
+            snapshotId,
+        )}`;
+
+        const body = {
+            deliver: {
+                type: 'webhook',
+                filename: {
+                    template: opts?.template ?? 'fb_pages_{{snapshot_id}}_{{timestamp}}',
+                    extension: opts?.extension ?? 'json',
+                },
+                endpoint: "https://c211a436e62b.ngrok-free.app/dev/data-collection/webhook/facebook/brightdata",
+            },
+            compress: !!opts?.compress,
+        };
+
+        const { data } = await firstValueFrom(
+            this.http.post(url, body, { headers: this.headers }),
+        );
+
+        console.log('data', data)
+        return data; // Bright Data จะตอบรายละเอียด job กลับมา
+
+    }
 
 }

@@ -9,8 +9,8 @@ export class RawData extends Document {
     source: string;
 
     /** คีย์ชุดข้อมูล/รอบการเก็บ เช่น jobId, snapshotId, วันที่เก็บ */
-    @Prop({ required: true, index: true })
-    batchKey: string;
+    @Prop({ required: false, index: true })
+    batchKey?: string;
 
     @Prop({ required: true, index: true })
     snapshot_id: string
@@ -20,8 +20,8 @@ export class RawData extends Document {
     externalId?: string;
 
     /** เนื้อข้อมูลดิบทั้งหมด (อาจใหญ่) */
-    @Prop({ type: MongooseSchema.Types.Mixed, required: true })
-    payload: any;
+    @Prop({ type: MongooseSchema.Types.Mixed, required: false })
+    payload?: any;
 
     /** เวลาที่ข้อมูลถูกเก็บมาจริง (ถ้า BrightData ใส่มา) */
     @Prop({ required: false, index: true })
@@ -42,8 +42,7 @@ export class RawData extends Document {
     @Prop({ type: Types.ObjectId, ref: 'User', required: false })
     updatedBy?: Types.ObjectId;
 
-    @Prop({ default: false, index: true })
-    isDeleted: boolean;
+
 }
 
 

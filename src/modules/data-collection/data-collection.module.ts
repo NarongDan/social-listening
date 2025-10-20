@@ -9,15 +9,12 @@ import brightdataConfig from './adapters/brightdata/brightdata.config';
 import { FacebookService } from './providers/facebook/facebook.service';
 import { DevDataCollectionController } from './presentation/dev-data-collection.controller';
 
-const devControllers = process.env.NODE_ENV !== 'production'
-  ? [DevDataCollectionController]
-  : [];
 
 @Module({
   providers: [DataCollectionService, BrightdataClient, FacebookService],
   imports: [ProcessingModule, StorageModule, HttpModule, ConfigModule.forFeature(brightdataConfig)],
   exports: [DataCollectionService],
-  controllers: [...devControllers],
+  controllers: [DevDataCollectionController],
 
 })
 export class DataCollectionModule { }

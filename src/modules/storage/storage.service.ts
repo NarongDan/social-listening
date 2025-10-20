@@ -3,6 +3,7 @@ import { RAW_DATA_REPOSITORY } from './domain/interfaces/raw-data.interface';
 import type { IRawDataRepository } from './domain/interfaces/raw-data.interface';
 import { NewRawData } from './domain/types/raw-data.types';
 import { RawData } from './domain/schemas/raw-data.schema';
+import { FilterQuery } from 'mongoose';
 
 @Injectable()
 export class StorageService {
@@ -18,6 +19,15 @@ export class StorageService {
 
     saveManyRawData(docs: NewRawData[]): Promise<{ inserted: number }> {
         return this.rawDataRepository.insertMany(docs);
+    }
+
+    findRawData(filter: FilterQuery<RawData>): Promise<RawData | null> {
+        return this.rawDataRepository.findOne(filter);
+    }
+
+    updateRawData(filter: FilterQuery<RawData>, doc: NewRawData): Promise<RawData | null> {
+        return this.rawDataRepository.updateOne(filter, doc);
+
     }
 
 }
