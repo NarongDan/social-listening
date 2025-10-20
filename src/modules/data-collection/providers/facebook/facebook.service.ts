@@ -37,8 +37,8 @@ export class FacebookService {
             const ds = this.bd.dataset('FB_PAGES_POSTS_BY_PROFILE_URL');
             const run = await this.bd.triggerAsync(ds, payload);
             const snapshotId = run?.snapshot_id ?? ds;
-            console.log('snapshotId---------', snapshotId)
-            await this.bd.deliverSnapshotToWebhook(snapshotId)
+            // console.log('snapshotId---------', snapshotId)
+            // await this.bd.deliverSnapshotToWebhook(snapshotId)
 
 
             // const { snapshot_id, rows } = await this.bd.pollExport(snapshotId, poll);
