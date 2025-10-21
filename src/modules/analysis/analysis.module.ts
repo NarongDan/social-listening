@@ -1,10 +1,17 @@
 import { Module } from '@nestjs/common';
-import { AnalysisService } from './analysis.service';
+import { AnalysisService } from './application/analysis.service';
 import { StorageModule } from '../storage/storage.module';
+import { OpenAIAdapter } from './adapters/llm/openai.adapter';
+import { SentimentService } from './services/sentiment/sentiment.service';
+import { ConfigModule } from '@nestjs/config';
+import openaiConfig from './adapters/llm/openai.config';
 
 @Module({
-  providers: [AnalysisService],
-  imports: [StorageModule],
+  providers: [AnalysisService, OpenAIAdapter, SentimentService],
+  imports: [StorageModule,
+    ConfigModule.forFeature(openaiConfig)
+  ],
+
   exports: [AnalysisService]
 })
 export class AnalysisModule { }
