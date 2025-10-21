@@ -12,7 +12,7 @@ import { RawDataRepository } from './domain/repositories/raw-data.repository';
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URI')!,
+        uri: configService.getOrThrow<string>('MONGODB_URI')!,
         serverSelectionTimeoutMS: 5000,
         maxPoolSize: 20,
         minPoolSize: 5,
