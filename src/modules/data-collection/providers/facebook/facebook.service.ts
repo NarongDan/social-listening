@@ -18,6 +18,8 @@ export class FacebookService {
             payload: row,
             collectedAt: row?.time ? new Date(row.time) : new Date(),
             ...(scraper && datasetId ? { meta: { scraper, datasetId } } : {}),
+            ...(scraper ? { scraper } : {}),
+            ...(datasetId ? { datasetId } : {}),
         };
     }
 

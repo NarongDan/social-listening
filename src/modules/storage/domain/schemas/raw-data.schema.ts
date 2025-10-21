@@ -15,6 +15,18 @@ export class RawData extends Document {
     @Prop({ required: true, index: true })
     snapshot_id: string
 
+    /** ข้อมูลเมตาเพิ่ม (เช่น endpoint, request_id, download_url, http_status ฯลฯ) */
+    @Prop({ type: MongooseSchema.Types.Mixed, required: false })
+    meta?: any;
+
+    @Prop()
+    scraper?: string // ชื่อ scraper ว่าทำอะไร
+    @Prop()
+    datasetId?: string // id ของ scraper (มีใน brightdata)
+
+
+
+
     /** ตัวระบุภายนอก (เช่น post_id / url) เพื่อช่วย de-duplicate แบบนุ่มนวล */
     @Prop({ required: false, index: true })
     externalId?: string;
@@ -27,9 +39,6 @@ export class RawData extends Document {
     @Prop({ required: false, index: true })
     collectedAt?: Date;
 
-    /** ข้อมูลเมตาเพิ่ม (เช่น endpoint, request_id, download_url, http_status ฯลฯ) */
-    @Prop({ type: MongooseSchema.Types.Mixed, required: false })
-    meta?: any;
 
     /** ฟิลด์ช่วยกันซ้ำแบบเด็ดขาด (hash ของ payload หรือคู่ (source,batchKey,externalId)) */
     @Prop({ required: false, unique: true, sparse: true })

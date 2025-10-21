@@ -25,6 +25,8 @@ export class DataCollectionService {
             snapshot_id,
             payload: "",
             meta: { scraper: 'FB_PAGES_POSTS_BY_PROFILE_URL', datasetId: datasetId },
+            scraper: 'FB_PAGES_POSTS_BY_PROFILE_URL',
+            datasetId
         }
 
 
@@ -38,6 +40,8 @@ export class DataCollectionService {
             snapshot_id,
             payload: "",
             meta: { scraper: 'FB_COMMENTS_BY_URL', datasetId: datasetId },
+            scraper: 'FB_COMMENTS_BY_URL',
+            datasetId
         }
 
         await this.storage.saveRawData(data)

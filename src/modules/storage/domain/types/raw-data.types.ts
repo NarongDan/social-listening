@@ -11,6 +11,10 @@ export interface RawData {
 
     snapshot_id: string
 
+    scraper?: string
+
+    datasetId?: string
+
     /** คีย์รอบการเก็บ เช่น jobId/snapshotId/วันที่ */
     batchKey?: string;
 

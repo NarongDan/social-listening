@@ -43,7 +43,7 @@ export class BrightdataClient {
         try {
 
 
-            const webhookUrl = 'https://268f351089b0.ngrok-free.app/dev/data-collection/webhook/facebook/brightdata';
+            const webhookUrl = 'https://2fdc5695965b.ngrok-free.app/dev/data-collection/webhook/facebook/brightdata';
 
             // const url = `https://api.brightdata.com/datasets/v3/trigger?dataset_id=${datasetId}&endpoint=${encodeURIComponent(webhookUrl)}&auth_header=&notify=true&format=json&uncompressed_webhook=true&force_deliver=false&include_errors=true`;
             // const body = { input: Array.isArray(input) ? input : [input] };
