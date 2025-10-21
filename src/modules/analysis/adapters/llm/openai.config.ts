@@ -3,7 +3,7 @@ import { registerAs } from '@nestjs/config';
 export default registerAs('openai', () => ({
     token: process.env.OPENAI_KEY!,
     model: process.env.OPENAI_MODEL ?? 'gpt-5-mini',
-    temperature: 0.3,
+    temperature: 1,
     maxTokens: 1024,
     timeoutMs: 20000,
 }));

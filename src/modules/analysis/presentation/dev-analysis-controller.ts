@@ -7,7 +7,7 @@ import { AnalyzeCommentDto } from "./dtos/sentiment.dto";
 export class DevAnalysisController {
     constructor(private readonly analysisService: AnalysisService) { }
 
-    @Post()
+    @Post('analyze-comment')
     async analyeComment(
         @Body() dto: AnalyzeCommentDto
     ) {

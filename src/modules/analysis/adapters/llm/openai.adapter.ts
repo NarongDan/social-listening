@@ -24,7 +24,7 @@ export class OpenAIAdapter {
             {
                 model: req.model ?? this.config.model,
                 temperature: req.temperature ?? this.config.temperature,
-                max_tokens: req.maxTokens ?? this.config.maxTokens,
+                max_completion_tokens: req.maxTokens ?? this.config.maxTokens,
                 messages: req.messages,
                 ...(req.responseFormat
                     ? { response_format: { type: req.responseFormat } as any }
