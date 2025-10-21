@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { StorageService } from './storage.service';
-import { ConfigModule, ConfigService } from '@nestjs/config';
+import { ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RawData, RawDataSchema } from './domain/schemas/raw-data.schema';
 import { RAW_DATA_REPOSITORY } from './domain/interfaces/raw-data.interface';
@@ -8,10 +8,7 @@ import { RawDataRepository } from './domain/repositories/raw-data.repository';
 
 @Module({
   imports: [
-    ConfigModule.forRoot({
-      isGlobal: true,
-      envFilePath: '.env.test',
-    }),
+
     MongooseModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({

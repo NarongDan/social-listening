@@ -6,9 +6,18 @@ import { StorageModule } from './modules/storage/storage.module';
 import { AnalysisModule } from './modules/analysis/analysis.module';
 import { ApiModule } from './modules/api/api.module';
 import { DataCollectionModule } from './modules/data-collection/data-collection.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
-  imports: [ProcessingModule, StorageModule, AnalysisModule, ApiModule, DataCollectionModule],
+  imports: [ConfigModule.forRoot({
+    isGlobal: true,
+    envFilePath: '.env.test',
+  }),
+    ProcessingModule,
+    StorageModule,
+    AnalysisModule,
+    ApiModule,
+    DataCollectionModule,],
   controllers: [AppController],
   providers: [AppService],
 })

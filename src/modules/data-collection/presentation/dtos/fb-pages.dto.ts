@@ -1,5 +1,5 @@
 import { Transform, Type } from 'class-transformer';
-import { IsArray, IsOptional, IsString, IsInt, Min, IsObject, IsNotEmpty, IsBoolean } from 'class-validator';
+import { IsArray, IsOptional, IsString, IsInt, Min, IsObject, IsNotEmpty, IsBoolean, IsEnum } from 'class-validator';
 
 export class FbPageInputItemDto {
     @IsNotEmpty() @IsString() url!: string;
@@ -16,6 +16,14 @@ export class FbPagesPostsPayloadDto {
 
 const toUndefIfEmpty = ({ value }: { value: any }) =>
     value === '' || value === null ? undefined : value
+
+
+
+enum FbCommentsSort {
+    NEWEST = 'Newest',
+    ALL_COMMENTS = 'All comments',
+    MOST_RELEVANT = 'Most relevant'
+}
 
 export class FbCommentsItemDto {
     @IsNotEmpty()
@@ -45,6 +53,7 @@ export class FbCommentsItemDto {
     @IsOptional()
     @IsString()
     @Transform(toUndefIfEmpty)
+    @IsEnum(FbCommentsSort)
     comments_sort?: string;
 }
 

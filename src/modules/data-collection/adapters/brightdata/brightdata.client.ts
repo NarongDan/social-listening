@@ -3,14 +3,19 @@ import { HttpService } from '@nestjs/axios';
 import brightdataConfig from './brightdata.config';
 import type { ConfigType } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class BrightdataClient {
+    private readonly serverURL: string;
     constructor(
         private readonly http: HttpService,
         @Inject(brightdataConfig.KEY)
         private readonly config: ConfigType<typeof brightdataConfig>,
-    ) { }
+        private readonly configService: ConfigService,
+    ) {
+        this.serverURL = this.configService.getOrThrow<string>('SERVER_URL');
+    }
     private get headers() {
         return { Authorization: `Bearer ${this.config.token}`, 'Content-Type': 'application/json' };
     }
@@ -43,21 +48,14 @@ export class BrightdataClient {
         try {
 
 
-            const webhookUrl = 'https://2fdc5695965b.ngrok-free.app/dev/data-collection/webhook/facebook/brightdata';
 
-            // const url = `https://api.brightdata.com/datasets/v3/trigger?dataset_id=${datasetId}&endpoint=${encodeURIComponent(webhookUrl)}&auth_header=&notify=true&format=json&uncompressed_webhook=true&force_deliver=false&include_errors=true`;
-            // const body = { input: Array.isArray(input) ? input : [input] };
-            // console.log('url', url)
-            // console.log('body----', body)
-
-
-            // const { data } = await firstValueFrom(this.http.post(url, body, { headers: this.headers }));
+            const webhookUrl = `${this.serverURL}/dev/data-collection/webhook/facebook/brightdata'`
 
 
             //  เปลี่ยน: body ต้องเป็น "array" ไม่ใช่ { input: [...] }
             const body = Array.isArray(input) ? input : [input];
 
-            // ✅ แนะนำใช้ params ให้ Axios encode ให้เอง
+            // ใช้ params ให้ Axios encode ให้เอง
             const url = 'https://api.brightdata.com/datasets/v3/trigger';
 
             const { data } = await firstValueFrom(
@@ -77,7 +75,6 @@ export class BrightdataClient {
                 })
             );
 
-            console.log('data', data)
 
             return data;
         } catch (error) {
@@ -141,11 +138,6 @@ export class BrightdataClient {
             compress?: boolean;
         },
     ): Promise<any> {
-        // if (!/^https?:\/\//i.test(endpoint)) {
-        //     throw new Error(`Webhook endpoint must include protocol (http/https): ${endpoint}`);
-        // }
-
-
 
         const url = `https://api.brightdata.com/datasets/v3/deliver/${encodeURIComponent(
             snapshotId,
@@ -160,9 +152,9 @@ export class BrightdataClient {
                             template: opts?.template ?? 'fb_pages_{{snapshot_id}}_{{timestamp}}',
                             extension: opts?.extension ?? 'json',
                         },
-                        endpoint: 'https://c211a436e62b.ngrok-free.app/dev/data-collection/webhook/facebook/brightdata',
+                        endpoint: `${this.serverURL}/dev/data-collection/webhook/facebook/brightdata`,
                     },
-                    compress: Boolean(opts?.compress),  // ✅ ไม่มีขึ้นบรรทัด
+                    compress: Boolean(opts?.compress),
                 }
                     , { headers: this.headers }),
             );
