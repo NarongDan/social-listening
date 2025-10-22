@@ -6,6 +6,7 @@ export interface IRawDataRepository {
     insert(doc: NewRawData): Promise<RawData>;
     insertMany(docs: NewRawData[]): Promise<{ inserted: number }>;
     findOne(filter: FilterQuery<RawData>,): Promise<RawData | null>;
+    findManyRawData(filter: FilterQuery<RawData>,): Promise<RawData[]>;
     updateOneRawData(filter: FilterQuery<RawData>, doc: NewRawData): Promise<RawData | null>;
     deleteOneRawData(filter: FilterQuery<RawData>,): Promise<RawData | null>;
 }

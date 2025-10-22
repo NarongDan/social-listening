@@ -1,6 +1,7 @@
-import { Module } from '@nestjs/common';
-import { ProcessingService } from './processing.service';
-import { StorageModule } from '../storage/storage.module';
+import { Module } from "@nestjs/common";
+import { StorageModule } from "../storage/storage.module";
+import { ProcessingService } from "./application/processing.service";
+
 
 @Module({
   providers: [ProcessingService],

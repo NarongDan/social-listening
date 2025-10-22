@@ -25,6 +25,10 @@ export class StorageService {
         return this.rawDataRepository.findOne(filter);
     }
 
+    findManyRawData(filter: FilterQuery<RawData>): Promise<RawData[]> {
+        return this.rawDataRepository.findManyRawData(filter);
+    }
+
     updateOneRawData(filter: FilterQuery<RawData>, doc: NewRawData): Promise<RawData | null> {
         return this.rawDataRepository.updateOneRawData(filter, doc);
 

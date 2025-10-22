@@ -1,8 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, HydratedDocument, Schema as MongooseSchema, Types } from 'mongoose';
+import { Document, Schema as MongooseSchema, Types } from 'mongoose';
 
 @Schema({ timestamps: true, collection: 'raw_data' })
 export class RawData extends Document {
+
 
     /** แหล่งที่มา เช่น 'facebook', 'brightdata' */
     @Prop({ required: true, index: true })
@@ -23,8 +24,6 @@ export class RawData extends Document {
     scraper?: string // ชื่อ scraper ว่าทำอะไร
     @Prop()
     datasetId?: string // id ของ scraper (มีใน brightdata)
-
-
 
 
     /** ตัวระบุภายนอก (เช่น post_id / url) เพื่อช่วย de-duplicate แบบนุ่มนวล */

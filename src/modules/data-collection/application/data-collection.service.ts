@@ -4,12 +4,17 @@ import { FacebookService } from '../providers/facebook/facebook.service';
 import { StorageService } from '../../storage/storage.service';
 import { NewRawData } from '../../storage/domain/types/raw-data.types';
 import { FbCommentsItemDto, FbPageInputItemDto } from '../presentation/dtos/fb-pages.dto';
-import { RawData } from '../../storage/domain/schemas/raw-data.schema';
+
+import { ProcessingProducer } from '../adapters/queues/processing.producer';
 
 
 @Injectable()
 export class DataCollectionService {
-    constructor(private readonly fb: FacebookService, private readonly storage: StorageService) { }
+    constructor(
+        private readonly fb: FacebookService,
+        private readonly storage: StorageService,
+        private readonly processingProducer: ProcessingProducer,
+    ) { }
 
     async collectFbPagesPostsByProfileUrlSync(payload: any, batchKey?: string) {
         // const key = batchKey ?? new Date().toISOString();
@@ -67,11 +72,28 @@ export class DataCollectionService {
         const key = batchKey ?? new Date().toISOString();
 
         const rawDataToUpdate = payload.map((r: any) => this.fb.toRaw(r, snapshotId, key, rawData.meta.scraper, rawData.meta.datasetId));
-        console.log('rawDataToUpdate------', rawDataToUpdate)
 
+        if (!rawDataToUpdate.length) {
+            return
+        }
         // await this.storage.updateRawData({ _id: rawData._id }, (rawDataToUpdate))
         await this.storage.saveManyRawData(rawDataToUpdate);
         await this.storage.deleteOneRawData({ _id: rawData._id })
+
+
+
+        const rawDatas = await this.storage.findManyRawData({ snapshot_id: snapshotId, source: 'facebook' });
+
+        if (!rawDatas.length) {
+            return
+        }
+        for (const rawData of rawDatas) {
+            // ส่งต่อเข้า processing queue
+            const rawId = rawData._id!.toString()
+            await this.processingProducer.enqueue(rawId);
+        }
+
+
 
 
     }

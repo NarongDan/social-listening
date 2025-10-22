@@ -49,6 +49,11 @@ export class RawDataRepository implements IRawDataRepository {
         return doc;
     }
 
+    async findManyRawData(filter: FilterQuery<RawData>): Promise<RawData[]> {
+        const docs = await this.rawModel.find(filter);
+        return docs
+    }
+
     async updateOneRawData(filter: FilterQuery<RawData>, doc: NewRawData): Promise<RawData | null> {
         const updated = await this.rawModel.findOneAndUpdate(filter, doc, { new: true });
         return updated

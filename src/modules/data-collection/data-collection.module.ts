@@ -8,11 +8,19 @@ import { ConfigModule } from '@nestjs/config';
 import brightdataConfig from './adapters/brightdata/brightdata.config';
 import { FacebookService } from './providers/facebook/facebook.service';
 import { DevDataCollectionController } from './presentation/dev-data-collection.controller';
+import { BullQueueModule } from '../../shared/queue/bull.config';
+import { BullModule } from '@nestjs/bullmq';
+import { ProcessingProducer } from './adapters/queues/processing.producer';
 
 
 @Module({
-  providers: [DataCollectionService, BrightdataClient, FacebookService],
-  imports: [ProcessingModule, StorageModule, HttpModule, ConfigModule.forFeature(brightdataConfig)],
+  providers: [DataCollectionService, BrightdataClient, FacebookService, ProcessingProducer],
+  imports: [ProcessingModule,
+    StorageModule,
+    HttpModule,
+    ConfigModule.forFeature(brightdataConfig),
+    BullQueueModule,
+    BullModule.registerQueue({ name: 'processing' }),],
   exports: [DataCollectionService],
   controllers: [DevDataCollectionController],
 
