@@ -6,11 +6,15 @@ import { SentimentService } from './services/sentiment/sentiment.service';
 import { ConfigModule } from '@nestjs/config';
 import openaiConfig from './adapters/llm/openai.config';
 import { DevAnalysisController } from './presentation/dev-analysis-controller';
+import { BullModule } from '@nestjs/bullmq';
+import { BullQueueModule } from '../../shared/queue/bull.config';
 
 @Module({
   providers: [AnalysisService, OpenAIAdapter, SentimentService],
   imports: [StorageModule,
-    ConfigModule.forFeature(openaiConfig)
+    ConfigModule.forFeature(openaiConfig),
+    BullModule.registerQueue({ name: 'analysis' }),
+    BullQueueModule,
   ],
   controllers: [
     DevAnalysisController

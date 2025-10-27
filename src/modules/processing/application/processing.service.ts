@@ -152,6 +152,7 @@ function buildProcessedScraperFbComments(raw: RawData): ProcessedData {
     const processed: ProcessedData = {
         rawDataId: raw._id.toString(),
         source: raw.source,
+        scraper: raw.scraper ?? raw.meta?.scraper ?? 'UNKNOWN', // <--- now explicit
         headline,
         text,
         language: languageGuess ?? undefined, // schema มี default 'th'
@@ -160,16 +161,12 @@ function buildProcessedScraperFbComments(raw: RawData): ProcessedData {
         batchKey: raw.batchKey ?? raw.snapshot_id ?? undefined,
         meta,
         isDuplicate,
+
     } as any;
 
     return processed;
 }
 
-/**
- * ล้างข้อความสำหรับส่งเข้า LLM
- * - trim
- * - collapse space
- */
 function sanitizeText(input: string): string {
     return (input || '')
         .replace(/\s+/g, ' ')

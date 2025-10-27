@@ -6,6 +6,8 @@ import { RawData } from './domain/schemas/raw-data.schema';
 import { FilterQuery } from 'mongoose';
 import { PROCESSED_DATA_REPOSITORY, type IProcessedDataRepository } from './domain/interfaces/processed-data.interface';
 import { ProcessedData } from './domain/schemas/processed-data.schema';
+import { type ISentimentAnalysisRepository, SENTIMENT_ANALYSIS_REPOSITORY } from './domain/interfaces/sentiment-analysis.interface';
+import { SentimentAnalysis } from './domain/schemas/sentiment-analysis.schema';
 
 
 @Injectable()
@@ -15,7 +17,9 @@ export class StorageService {
         @Inject(RAW_DATA_REPOSITORY)
         private readonly rawDataRepository: IRawDataRepository,
         @Inject(PROCESSED_DATA_REPOSITORY)
-        private readonly processedDataRepository: IProcessedDataRepository
+        private readonly processedDataRepository: IProcessedDataRepository,
+        @Inject(SENTIMENT_ANALYSIS_REPOSITORY)
+        private readonly sentimentAnalysisRepository: ISentimentAnalysisRepository
     ) { }
 
     saveRawData(doc: NewRawData): Promise<RawData> {
@@ -65,6 +69,15 @@ export class StorageService {
     }
     deleteOneProcessedData(filter: FilterQuery<ProcessedData>): Promise<ProcessedData | null> {
         return this.processedDataRepository.deleteOneProcessedData(filter);
+    }
+
+
+    insertOneSentimentAnalysis(doc: SentimentAnalysis): Promise<SentimentAnalysis> {
+        return this.sentimentAnalysisRepository.insertOneSentimentAnalysis(doc);
+    }
+
+    findOneSentimentAnalysis(filter: FilterQuery<SentimentAnalysis>): Promise<SentimentAnalysis | null> {
+        return this.sentimentAnalysisRepository.findOneSentimentAnalysis(filter);
     }
 
 }

@@ -13,6 +13,9 @@ export class ProcessedData extends Document {
     @Prop({ required: true })
     source: string
 
+    @Prop({ required: true, index: true })
+    scraper: string; // <--- เพิ่ม
+
     @Prop()
     headline?: string;
 
@@ -33,6 +36,7 @@ export class ProcessedData extends Document {
 
     @Prop({ type: MongooseSchema.Types.Mixed, required: false })
     meta?: any;
+
 
 
     @Prop({ default: false })
