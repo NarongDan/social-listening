@@ -87,14 +87,14 @@ export class DataCollectionService {
         if (!rawDatas.length) {
             return
         }
-        for (const rawData of rawDatas) {
-            // ส่งต่อเข้า processing queue
-            const rawId = rawData._id!.toString()
-            await this.processingProducer.enqueue(rawId);
-        }
-
-
-
+        // for (const rawData of rawDatas) {
+        //     // ส่งต่อเข้า processing queue
+        //     const rawId = rawData._id!.toString()
+        //     await this.processingProducer.enqueue(rawId);
+        // }
+        await Promise.allSettled(
+            rawDatas.map(doc => this.processingProducer.enqueue(doc._id!.toString()))
+        );
 
     }
 

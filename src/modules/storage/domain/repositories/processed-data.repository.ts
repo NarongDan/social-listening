@@ -1,21 +1,23 @@
-
+// src/modules/storage/domain/repositories/raw-data.repository.ts
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { FilterQuery, Model } from 'mongoose';
 
 import { RawData, } from '../schemas/raw-data.schema';
-import { NewRawData } from '../types/raw-data.types';
+
 import { IRawDataRepository } from '../interfaces/raw-data.interface';
+import { IProcessedDataRepository } from '../interfaces/processed-data.interface';
+import { ProcessedData } from '../schemas/processed-data.schema';
 
 
 @Injectable()
-export class RawDataRepository implements IRawDataRepository {
+export class ProcessedDataRepository implements IProcessedDataRepository {
     constructor(
-        @InjectModel(RawData.name)
-        private readonly rawModel: Model<RawData>,
+        @InjectModel(ProcessedData.name)
+        private readonly rawModel: Model<ProcessedData>,
     ) { }
 
-    async insertRawData(doc: NewRawData): Promise<RawData> {
+    async insertProcessedData(doc: ProcessedData): Promise<ProcessedData> {
         const created = await this.rawModel.create(doc);
         return created
     }
@@ -25,7 +27,7 @@ export class RawDataRepository implements IRawDataRepository {
      * - ใช้ ordered:false เพื่อให้ไม่หยุดเมื่อเจอเอกสารซ้ำ (หากมี unique index)
      * - คืนจำนวนที่ใส่ได้จริง
      */
-    async insertManyRawData(docs: NewRawData[]): Promise<{ inserted: number }> {
+    async insertManyProcessedData(docs: ProcessedData[]): Promise<{ inserted: number }> {
         if (!docs?.length) return { inserted: 0 };
 
         // ใช้ native driver เพื่อผลลัพธ์แบบ InsertManyResult
@@ -38,10 +40,10 @@ export class RawDataRepository implements IRawDataRepository {
         return { inserted };
     }
 
-    async findOneRawData(
-        filter: FilterQuery<RawData>,
+    async findOneProcessedData(
+        filter: FilterQuery<ProcessedData>,
 
-    ): Promise<RawData | null> {
+    ): Promise<ProcessedData | null> {
         const doc = await this.rawModel
             .findOne(filter)
 
@@ -49,17 +51,17 @@ export class RawDataRepository implements IRawDataRepository {
         return doc;
     }
 
-    async findManyRawData(filter: FilterQuery<RawData>): Promise<RawData[]> {
+    async findManyProcessedData(filter: FilterQuery<ProcessedData>): Promise<ProcessedData[]> {
         const docs = await this.rawModel.find(filter);
         return docs
     }
 
-    async updateOneRawData(filter: FilterQuery<RawData>, doc: NewRawData): Promise<RawData | null> {
+    async updateOneProcessedData(filter: FilterQuery<ProcessedData>, doc: ProcessedData): Promise<ProcessedData | null> {
         const updated = await this.rawModel.findOneAndUpdate(filter, doc, { new: true });
         return updated
     }
 
-    async deleteOneRawData(filter: FilterQuery<RawData>): Promise<RawData | null> {
+    async deleteOneProcessedData(filter: FilterQuery<ProcessedData>): Promise<ProcessedData | null> {
         const deleted = await this.rawModel.findOneAndDelete(filter);
         return deleted;
     }

@@ -1,9 +1,13 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
 import { Document, Schema as MongooseSchema, Types } from 'mongoose';
+
+
 
 @Schema({ timestamps: true, collection: 'raw_data' })
 export class RawData extends Document {
 
+
+    declare _id: Types.ObjectId;
 
     /** แหล่งที่มา เช่น 'facebook', 'brightdata' */
     @Prop({ required: true, index: true })
@@ -50,9 +54,7 @@ export class RawData extends Document {
     @Prop({ type: Types.ObjectId, ref: 'User', required: false })
     updatedBy?: Types.ObjectId;
 
-
 }
-
 
 export const RawDataSchema = SchemaFactory.createForClass(RawData);
 
