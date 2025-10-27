@@ -65,171 +65,113 @@ export class ProcessingService {
         await this.analysisProducer.enqueueSentiment(processed._id.toString());
     }
 }
+/**
+ * entrypoint หลัก: เลือก handler ตาม scraper
+ */
+export function buildProcessedFromRaw(raw: RawData): ProcessedData {
+    const scraper = raw.scraper ?? raw.meta?.scraper;
+
+    switch (scraper) {
+        case 'FB_COMMENTS_BY_URL':
+            return buildProcessedScraperFbComments(raw);
+
+        case 'FB_PAGES_POSTS_BY_PROFILE_URL':
+            // TODO: รองรับโพสต์ของเพจ (trend use case)
+            throw new Error('Scraper FB_PAGES_POSTS_BY_PROFILE_URL not implemented yet');
+
+        default:
+            throw new Error(`Unsupported scraper: ${scraper ?? '(undefined)'}`);
+    }
+
+}
 
 /**
- * สร้าง ProcessedData (plain object) จาก RawData
- * จุดนี้คือ mapping rule สำคัญ
+ * แปลง raw record ที่มาจาก BrightData scraper: FB_COMMENTS_BY_URL
+ * ให้กลายเป็น ProcessedData พร้อมใช้งานต่อใน sentiment pipeline
  */
-function buildProcessedFromRaw(raw: RawData): ProcessedData {
-    // 1) ดึงค่าที่สนใจจาก raw.payload
-    const {
-        text,
-        headline,
-        contentType,
-        externalId,
-        languageGuess,
-    } = extractNormalizedFieldsFromRaw(raw);
+function buildProcessedScraperFbComments(raw: RawData): ProcessedData {
+    const p = raw.payload ?? {};
 
-    // 2) บีบ whitespace ให้สะอาด
-    const cleanedText = cleanText(text);
+    // 1. เนื้อคอมเมนต์ที่จะเอาไปวิเคราะห์ sentiment
+    const text = sanitizeText(p.comment_text ?? '');
 
-    // 3) ทำ dedupe key แบบง่าย (optional)
-    const dedupeKey = calcSoftDedupeKey(raw.source, externalId, cleanedText);
+    // 2. headline = บริบทของโพสต์ต้นทาง
+    //    ยังไม่มีข้อความโพสต์จริงในตัวอย่าง payload ที่ให้มา
+    //    ใช้ post_url เป็น proxy ชั่วคราว
+    //    ถ้ามี field ที่เป็น caption/โพสต์จริงในอนาคต ให้สลับมาใช้ทันที
+    const headline =
+        p.post_headline ??
+        p.post_message ??
+        p.post_text ??
+        p.post_caption ??
+        p.post_url ??
+        p.url ??
+        undefined;
 
-    // ถ้าอยาก mark duplicate:
-    // สมมติเรายังไม่มี lookup processed_data ตาม dedupeKey
-    // ตอนนี้เราจะตั้ง isDuplicate=false ไว้ก่อน
-    // ในอนาคตคุณสามารถเช็ค storage.findProcessedData({ 'meta.dedupeKey': dedupeKey })
-    // แล้ว flip isDuplicate=true ได้
+    // 3. externalId ใช้ post_id หรือ comment_id (ขึ้นกับมุมมอง)
+    //    - ถ้าจะวัด sentiment ต่อโพสต์ ใช้ post_id
+    //    - ถ้าอยาก track per-comment โดยตรง ใช้ comment_id
+    //    ตอนนี้เราจะใส่ทั้งสองไว้ใน meta ด้วย
+    const externalId = p.comment_id ?? p.post_id ?? raw.externalId;
+
+    // 4. contentType
+    const contentType: 'comment' | 'reply' | 'post' =
+        p.reply === true ? 'reply' : 'comment';
+
+    // 5. language
+    //    ถ้ายังไม่มี language detection จริง ให้ undefined แล้ว schema จะ default 'th'
+    //    ถ้า BrightData เริ่มส่งภาษามา (p.lang / p.language) ก็ใช้ทันที
+    const languageGuess = p.lang ?? p.language ?? raw.meta?.language ?? undefined;
+
+    // 6. duplicate flag (เบื้องต้น = false)
+    //    คุณสามารถเติม logic dedupe ภายหลัง เช่นเทียบ hash (source + comment_id + text)
     const isDuplicate = false;
 
-    const processedObj: ProcessedData = {
-        // binding กลับไปหา raw record นี้
+    // 7. meta เก็บ context เสริมที่ sentiment ยังไม่ใช้ แต่ trend อนาคตจะใช้
+    const meta: Record<string, any> = {
+        post_id: p.post_id,
+        comment_id: p.comment_id,
+        user_id: p.user_id,
+        user_name: p.user_name,
+        post_url: p.post_url,
+        comment_link: p.comment_link,
+        num_likes: p.num_likes,
+        num_replies: p.num_replies,
+        reply: p.reply,
+        parent_comment_id: p.parent_comment_id,
+        date_created: p.date_created,
+        timestamp: p.timestamp,
+        batchKey: raw.batchKey,
+        snapshot_id: raw.snapshot_id,
+        datasetId: raw.datasetId ?? raw.meta?.datasetId,
+        scraper: raw.scraper ?? raw.meta?.scraper,
+        collectedAt: raw.collectedAt ?? p.collectedAt,
+    };
+
+    // 8. สร้าง ProcessedData (plain object)
+    const processed: ProcessedData = {
         rawDataId: raw._id.toString(),
-
         source: raw.source,
-
-        // บริบท/หัวข้อของข้อความ (เช่นหัวข้อโพสต์)
         headline,
-
-        // เนื้อความที่พร้อมใช้วิเคราะห์ sentiment / stance
-        text: cleanedText,
-
-        // ภาษาที่คาดเดา ณ ตอนนี้ (fallback 'th')
-        language: languageGuess ?? 'th',
-
-        // ประเภทของ content เช่น comment/post/reply
-        contentType: contentType ?? 'post',
-
-        // ตัวชี้โพสต์/คอมเมนต์ เช่น post_id, url
-        externalId: externalId ?? raw.externalId,
-
-        // ชุดรัน/รอบการดึง
+        text,
+        language: languageGuess ?? undefined, // schema มี default 'th'
+        contentType,
+        externalId,
         batchKey: raw.batchKey ?? raw.snapshot_id ?? undefined,
-
-        // meta เก็บข้อมูลอ้างอิงกลับไปยัง raw
-        meta: {
-            snapshot_id: raw.snapshot_id,
-            datasetId: raw.datasetId,
-            scraper: raw.scraper,
-            dedupeKey,
-            collectedAt: raw.collectedAt,
-            metaFromRaw: raw.meta ?? undefined,
-        },
-
+        meta,
         isDuplicate,
     } as any;
 
-    return processedObj;
+    return processed;
 }
 
 /**
- * ดึงฟิลด์สำคัญจาก raw.payload
- * NOTE: ตรงนี้คือจุดเดียวที่คุณต้องอัพเดตถ้า BrightData เปลี่ยน shape
+ * ล้างข้อความสำหรับส่งเข้า LLM
+ * - trim
+ * - collapse space
  */
-function extractNormalizedFieldsFromRaw(raw: RawData): {
-    text: string;
-    headline?: string;
-    contentType?: 'comment' | 'post' | 'reply';
-    externalId?: string;
-    languageGuess?: string;
-} {
-    const p = raw.payload ?? {};
-
-    // ตัวอย่าง heuristic:
-    // - ถ้าเป็นคอมเมนต์ BrightData มักเก็บ message/comment/message_text
-    // - ถ้าเป็นโพสต์ อาจเก็บ message/headline/title
-    // - externalId อาจมาจาก post_id หรือ comment_id
-    // ปรับตรงนี้ให้ match โครงสร้างจริงของ payload ของคุณ
-
-    const text =
-        p.comment_text ??
-        p.comment ??
-        p.message ??
-        p.text ??
-        '';
-
-    const headline =
-        p.headline ??
-        p.post_headline ??
-        p.post_title ??
-        p.parent_post_headline ??
-        raw.meta?.headline ??
-        undefined;
-
-    const externalId =
-        p.comment_id ??
-        p.post_id ??
-        p.url ??
-        raw.externalId ??
-        undefined;
-
-    // content type: เดาว่า ถ้ามี comment_id -> comment
-    // ถ้ามี post_id -> post
-    let contentType: 'comment' | 'post' | 'reply' | undefined;
-    if (p.comment_id) contentType = 'comment';
-    else if (p.post_id) contentType = 'post';
-    else contentType = undefined;
-
-    // เดายังไงก็ได้ตอนนี้ สำหรับ language
-    // (ถ้า BrightData มี field ภาษา ใช้อันนั้น)
-    const languageGuess =
-        p.lang ??
-        p.language ??
-        raw.meta?.language ??
-        undefined;
-
-    return {
-        text,
-        headline,
-        contentType,
-        externalId,
-        languageGuess,
-    };
-}
-
-/**
- * ล้าง whitespace ให้พร้อมส่งเข้า model
- */
-function cleanText(input: string): string {
+function sanitizeText(input: string): string {
     return (input || '')
         .replace(/\s+/g, ' ')
         .trim();
-}
-
-/**
- * dedupeKey แบบ soft (ไม่ต้อง unique ใน DB ตอนนี้)
- * ใช้ช่วยบอกว่า content นี้น่าจะเหมือนเดิมไหม
- */
-function calcSoftDedupeKey(
-    source: string,
-    externalId: string | undefined,
-    text: string,
-): string | undefined {
-    const base = [
-        source ?? '',
-        externalId ?? '',
-        text,
-    ]
-        .join('||')
-        .toLowerCase()
-        .trim();
-
-    if (!base || base === '||') return undefined;
-
-    let hash = 0;
-    for (let i = 0; i < base.length; i++) {
-        hash = (Math.imul(31, hash) + base.charCodeAt(i)) | 0;
-    }
-    return 'h' + hash.toString(16);
 }
