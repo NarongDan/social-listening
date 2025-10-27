@@ -1,14 +1,25 @@
+import { Module } from '@nestjs/common';
 import { BullModule } from '@nestjs/bullmq';
+import { ConfigService } from '@nestjs/config';
 
-export const BullQueueModule = BullModule.forRoot({
-    connection: {
-        host: process.env.REDIS_HOST ?? '127.0.0.1',
-        port: +(process.env.REDIS_PORT ?? 6379),
-    },
-    defaultJobOptions: {
-        removeOnComplete: true,
-        removeOnFail: false,
-        attempts: 3,
-        backoff: { type: 'exponential', delay: 500 },
-    },
-});
+@Module({
+    imports: [
+        BullModule.forRootAsync({
+            useFactory: async (configService: ConfigService) => ({
+                connection: {
+                    host: configService.getOrThrow('REDIS_HOST'),
+                    port: configService.getOrThrow<number>('REDIS_PORT'),
+                },
+                defaultJobOptions: {
+                    removeOnComplete: true,
+                    removeOnFail: false,
+                    attempts: 3,
+                    backoff: { type: 'exponential', delay: 500 },
+                },
+            }),
+            inject: [ConfigService],
+        }),
+    ],
+    exports: [BullModule],
+})
+export class BullQueueModule { }

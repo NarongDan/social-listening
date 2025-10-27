@@ -11,7 +11,10 @@ export class DevDataCollectionController {
 
     @Get()
     async test() {
-        console.log('test');
+        const snapshotId = "s_mgzzymakk6rgufiht"
+
+
+        await this.dataCollectionService.receiveFacebookSnapshotFromBrightData({}, snapshotId)
     }
 
     /** Synchronous: รอผลแล้วบันทึกลง Storage */

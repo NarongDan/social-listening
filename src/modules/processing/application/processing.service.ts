@@ -51,7 +51,7 @@ export class ProcessingService {
         );
 
         // TODO: ถ้าวันหนึ่งคุณอยากตัดสินใจจาก rawDoc.meta.autoAnalyze ให้ดึงตรงนี้
-        const autoAnalyze = false;
+        const autoAnalyze = true;
 
         return {
             processed: savedProcessed,

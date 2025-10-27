@@ -24,23 +24,28 @@ export class AnalysisProducer {
      * - ใช้ jobId แบบ deterministic เพื่อให้ไม่ส่งงานซ้ำ
      */
     async enqueueSentiment(processedId: string) {
-        return this.analysisQueue.add(
-            'analysis.sentiment', // job name (worker จะ filter จากชื่อนี้ก็ได้)
-            {
-                processedId,
-                task: 'sentiment',
-            },
-            {
-                jobId: `sentiment:${processedId}`, // กัน duplicate
-                priority: 2,
-                removeOnComplete: 1000,
-                attempts: 3,
-                backoff: {
-                    type: 'exponential',
-                    delay: 500,
+        try {
+            return this.analysisQueue.add(
+                'analysis.sentiment', // job name (worker จะ filter จากชื่อนี้ก็ได้)
+                {
+                    processedId,
+                    task: 'sentiment',
                 },
-            },
-        );
+                {
+                    jobId: `sentiment_${processedId}`, // กัน duplicate
+                    priority: 2,
+                    removeOnComplete: 1000,
+                    attempts: 3,
+                    backoff: {
+                        type: 'exponential',
+                        delay: 500,
+                    },
+                },
+            );
+        } catch (error) {
+            console.log(`error`, error);
+        }
+
     }
 
     /**

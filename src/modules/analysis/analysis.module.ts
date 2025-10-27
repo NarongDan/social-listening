@@ -8,13 +8,15 @@ import openaiConfig from './adapters/llm/openai.config';
 import { DevAnalysisController } from './presentation/dev-analysis-controller';
 import { BullModule } from '@nestjs/bullmq';
 import { BullQueueModule } from '../../shared/queue/bull.config';
+import { AnalysisConsumer } from './adapters/queues/analysis.consumer';
 
 @Module({
-  providers: [AnalysisService, OpenAIAdapter, SentimentService],
-  imports: [StorageModule,
+  providers: [AnalysisService, OpenAIAdapter, SentimentService, AnalysisConsumer],
+  imports: [BullQueueModule,
+    StorageModule,
     ConfigModule.forFeature(openaiConfig),
     BullModule.registerQueue({ name: 'analysis' }),
-    BullQueueModule,
+
   ],
   controllers: [
     DevAnalysisController

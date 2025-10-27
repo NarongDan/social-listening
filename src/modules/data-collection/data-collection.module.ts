@@ -15,11 +15,10 @@ import { ProcessingProducer } from './adapters/queues/processing.producer';
 
 @Module({
   providers: [DataCollectionService, BrightdataClient, FacebookService, ProcessingProducer],
-  imports: [ProcessingModule,
+  imports: [BullQueueModule, ProcessingModule,
     StorageModule,
     HttpModule,
     ConfigModule.forFeature(brightdataConfig),
-    BullQueueModule,
     BullModule.registerQueue({ name: 'processing' }),],
   exports: [DataCollectionService],
   controllers: [DevDataCollectionController],

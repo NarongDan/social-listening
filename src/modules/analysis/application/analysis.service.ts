@@ -18,52 +18,63 @@ export class AnalysisService {
     }
 
     async runSentiment(processedId: string): Promise<SentimentAnalysis> {
-        // 1) กันยิงซ้ำ
-        const existing = await this.storage.findOneSentimentAnalysis({ processedId });
-        if (existing) {
-            this.logger.debug(`Sentiment already exists for processedId=${processedId}`);
-            return existing;
+
+        try {
+            // 1) กันยิงซ้ำ
+            const existing = await this.storage.findOneSentimentAnalysis({ processedId });
+            if (existing) {
+                this.logger.debug(`Sentiment already exists for processedId=${processedId}`);
+                return existing;
+            }
+
+
+
+            // 2) โหลด processed data ต้นทาง
+            const processed = await this.storage.findProcessedData({ _id: new Types.ObjectId(processedId) });
+
+
+            if (!processed) {
+                throw new Error(`ProcessedData not found: ${processedId}`);
+            }
+
+            // // 3) ส่งไป analyze 
+            const result = await this.analyzeComment(
+                processed.headline ?? '',
+                processed.text ?? '',
+            );
+
+
+            // // 4) เอาผลไปบันทึก
+
+            // normalize output เผื่อ LLM คืนของแปลก
+            const sentimentDoc = {
+                processedId,
+                sentiment: result.sentiment,
+                stance: result.stance,
+                confidence: result.confidence,
+                reason: result.reason,
+                // model: result.model ?? 'gpt-5-mini',
+                scraper: processed.scraper,
+                language: processed.language,
+                contentType: processed.contentType,
+                meta: {
+                    usage: result.usage ?? undefined,
+                },
+            } as SentimentAnalysis;
+
+            // 5) บันทึก
+            const saved = await this.storage.insertOneSentimentAnalysis(sentimentDoc);
+
+            this.logger.log(
+                `Sentiment analyzed for processedId=${processedId} sentiment=${saved.sentiment} confidence=${saved.confidence}`,
+            );
+
+            return saved;
+
+        } catch (error) {
+            console.log('error---------', error)
+            throw error
         }
 
-
-        // 2) โหลด processed data ต้นทาง
-        const processed = await this.storage.findProcessedData({ _id: new Types.ObjectId(processedId) });
-
-        if (!processed) {
-            throw new Error(`ProcessedData not found: ${processedId}`);
-        }
-
-        // // 3) ส่งไป analyze 
-        const result = await this.analyzeComment(
-            processed.headline ?? '',
-            processed.text ?? '',
-        );
-
-        // // 4) เอาผลไปบันทึก
-
-        // normalize output เผื่อ LLM คืนของแปลก
-        const sentimentDoc = {
-            processedId,
-            sentiment: result.sentiment,
-            stance: result.stance,
-            confidence: result.confidence,
-            reason: result.reason,
-            // model: result.model ?? 'gpt-5-mini',
-            scraper: processed.scraper,
-            language: processed.language,
-            contentType: processed.contentType,
-            meta: {
-                usage: result.usage ?? undefined,
-            },
-        } as SentimentAnalysis;
-
-        // 5) บันทึก
-        const saved = await this.storage.insertOneSentimentAnalysis(sentimentDoc);
-
-        this.logger.log(
-            `Sentiment analyzed for processedId=${processedId} sentiment=${saved.sentiment} confidence=${saved.confidence}`,
-        );
-
-        return saved;
     }
 }

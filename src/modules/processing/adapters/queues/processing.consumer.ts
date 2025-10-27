@@ -8,18 +8,19 @@ type ProcessingJobData = { rawId: string };
 
 @Processor('processing', { concurrency: 10 })
 @Injectable()
+// export class ProcessingConsumer extends WorkerHost {
 export class ProcessingConsumer extends WorkerHost {
     private readonly logger = new Logger(ProcessingConsumer.name);
 
     constructor(private readonly processingService: ProcessingService) {
         super();
     }
-
     /**
      * BullMQ จะเรียกอัตโนมัติเมื่อมี job ใหม่ในคิว 'processing'
      */
     async process(job: Job<ProcessingJobData>): Promise<any> {
         const { rawId } = job.data;
+
         const started = Date.now();
 
         // 1) เช็กว่ามี processed ไปแล้วไหม

@@ -25,6 +25,7 @@ export class AnalysisConsumer extends WorkerHost {
 
         switch (task) {
             case 'sentiment': {
+                console.log('sentiment')
                 const sentimentDoc = await this.analysisService.runSentiment(processedId);
 
                 const ms = Date.now() - started;

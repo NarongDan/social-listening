@@ -61,28 +61,28 @@ export class DataCollectionService {
 
     async receiveFacebookSnapshotFromBrightData(payload: any, snapshotId: string, batchKey?: string): Promise<void> {
 
-        const rawData = await this.storage.findRawData({ snapshot_id: snapshotId, source: 'facebook' })
-        // console.log('payload', payload)
+        // const rawData = await this.storage.findRawData({ snapshot_id: snapshotId, source: 'facebook' })
 
-        // console.log('rawData', rawData)
-        if (!rawData) {
-            return
-        }
+        // if (!rawData) {
+        //     return
+        // }
 
-        const key = batchKey ?? new Date().toISOString();
+        // const key = batchKey ?? new Date().toISOString();
 
-        const rawDataToUpdate = payload.map((r: any) => this.fb.toRaw(r, snapshotId, key, rawData.meta.scraper, rawData.meta.datasetId));
+        // const rawDataToUpdate = payload.map((r: any) => this.fb.toRaw(r, snapshotId, key, rawData.meta.scraper, rawData.meta.datasetId));
 
-        if (!rawDataToUpdate.length) {
-            return
-        }
-        // await this.storage.updateRawData({ _id: rawData._id }, (rawDataToUpdate))
-        await this.storage.saveManyRawData(rawDataToUpdate);
-        await this.storage.deleteOneRawData({ _id: rawData._id })
-
+        // if (!rawDataToUpdate.length) {
+        //     return
+        // }
+        // // await this.storage.updateRawData({ _id: rawData._id }, (rawDataToUpdate))
+        // await this.storage.saveManyRawData(rawDataToUpdate);
+        // await this.storage.deleteOneRawData({ _id: rawData._id })
 
 
         const rawDatas = await this.storage.findManyRawData({ snapshot_id: snapshotId, source: 'facebook' });
+
+
+
 
         if (!rawDatas.length) {
             return
@@ -93,7 +93,7 @@ export class DataCollectionService {
         //     await this.processingProducer.enqueue(rawId);
         // }
         await Promise.allSettled(
-            rawDatas.map(doc => this.processingProducer.enqueue(doc._id!.toString()))
+            rawDatas.map(doc => this.processingProducer.enqueue(doc._id.toString()))
         );
 
     }
